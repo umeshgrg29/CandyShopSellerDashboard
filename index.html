@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Candly shop Seller Dashboard </title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Candy Management</h1>
+
+    <form>
+        <label for="candyname">Candy Name: </label>
+        <input type="text" id="candyname" name="candyname">
+
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description">
+
+        <label for="price">Price :</label>
+        <input type="number" id="price" name="price">
+
+        <label for="quantity">Quantity :</label>
+        <input type="number" id="quantity" name="quantity">
+
+        <input type="button" value="Add Candy" onclick="addCandy()">
+    </form>
+    <h3>Candies available</h3>
+    <ul id="candyList"></ul>
+
+    <script>
+        const API_ENDPOINT = "http://localhost:4000/candy";
+
+        async function addCandy() {
+            const candyname = document.getElementById("candyname").value;
+            const description = document.getElementById("description").value;
+            const price = document.getElementById("price").value;
+            const quantity = document.getElementById("quantity").value;
+            // console.log(candyname, description, price, quantity)
+
+            try {
+                const response = await axios.post(API_ENDPOINT + "/add-candy", { candyname, description, price, quantity });
+                const data = response.data.newCandyDetail;
+                // console.log(data)
+                // console.log(data.id)
+                const candyList = document.getElementById("candyList");
+                const li = document.createElement("li");
+                li.innerHTML = `<span>${data.candyname} - ${data.description} - ${data.price} - ${data.quantity}</span><button onclick="buyCandy('${data.id}', '${data.quantity}', 1)">Buy1</button><button onclick="buyCandy('${data.id}', '${data.quantity}', 2)">Buy2</button><button onclick="buyCandy('${data.id}', '${data.quantity}', 3)">Buy3</button>`;
+                candyList.appendChild(li);
+                document.getElementById("candyname").value = "";
+                document.getElementById("description").value = "";
+                document.getElementById("price").value = "";
+                document.getElementById("quantity").value = "";
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function buyCandy( id, quantity, candyBrought) {
+
+            const newQuantity = quantity - candyBrought;
+            // console.log(newQuantity)
+            if(newQuantity< 1)
+            {
+                alert("Candies finished")
+            }
+            else{
+                await axios.put(API_ENDPOINT + `/edit-candy/` +`${id}`, { quantity : newQuantity });
+                const candyList = document.getElementById("candyList");
+                candyList.innerHTML = "";
+                await fetchCandy();
+
+            }
+            
+
+        }
+
+
+        async function fetchCandy() {
+            try {
+                const response = await axios.get(API_ENDPOINT + "/get-candy");
+                const data = response.data.allCandys;
+                // console.log(data)
+                const candyList = document.getElementById("candyList");
+
+                data.forEach((candy) => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<span>${candy.candyname} - ${candy.description}  - ${candy.price} - ${candy.quantity} </span><button onclick="buyCandy('${candy.id}', '${candy.quantity}', 1)">Buy1</button><button onclick="buyCandy('${candy.id}', '${candy.quantity}', 2)">Buy2</button><button onclick="buyCandy('${candy.id}', '${candy.quantity}', 3)">Buy3</button>`;
+                    candyList.appendChild(li);
+                
+                });
+            } catch (error) {
+                console.log(error);
+            }
+
+
+        }
+
+        async function init() {
+            await fetchCandy();
+        }
+
+        init();
+
+    </script>
+</body>
+
+</html>
